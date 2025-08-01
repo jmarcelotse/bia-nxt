@@ -477,7 +477,7 @@ deploy() {
     print_header "DEPLOY CONCLUÍDO COM SUCESSO"
     print_success "Versão deployada: $commit_hash"
     print_success "Task Definition: $task_def_arn"
-    print_info "Acesse a aplicação em: http://54.161.19.13"
+    print_info "Acesse a aplicação em: http://54.227.222.64"
 }
 
 # =============================================================================
