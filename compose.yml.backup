@@ -8,7 +8,7 @@ services:
       - database
     environment:
       DB_USER: postgres
-      DB_PWD: ?b1K(Qp][fyA5ODnY<DPX6F[A#d6
+      DB_PWD: arn:aws:secretsmanager:us-east-1:873976611862:secret:rds!db-351c97aa-df32-43ee-8182-b2872962dbb7-mHDOMB:password
       DB_HOST: bia.ccxceeiycgx6.us-east-1.rds.amazonaws.com
       DB_PORT: 5432
       ## NAO PRECISA NO BOOTCAMP DAQUI PRA BAIXO ##
