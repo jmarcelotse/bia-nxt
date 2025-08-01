@@ -337,16 +337,21 @@ update_service() {
         --query 'service.{serviceName:serviceName,taskDefinition:taskDefinition,desiredCount:desiredCount}' \
         --output table
     
-    print_success "Serviço atualizado com sucesso"
-    print_info "Aguardando estabilização do serviço..."
-    
-    # Aguardar estabilização
-    aws ecs wait services-stable \
-        --region $AWS_REGION \
-        --cluster $ECS_CLUSTER \
-        --services $ECS_SERVICE
-    
-    print_success "Serviço estabilizado com commit hash: $commit_hash"
+    if [ $? -eq 0 ]; then
+        print_success "Serviço atualizado com sucesso"
+        print_info "Aguardando estabilização do serviço..."
+        
+        # Aguardar estabilização
+        aws ecs wait services-stable \
+            --region $AWS_REGION \
+            --cluster $ECS_CLUSTER \
+            --services $ECS_SERVICE
+        
+        print_success "Serviço estabilizado com commit hash: $commit_hash"
+    else
+        print_error "Falha ao atualizar serviço ECS"
+        exit 1
+    fi
 }
 
 # =============================================================================
