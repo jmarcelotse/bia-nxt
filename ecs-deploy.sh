@@ -245,8 +245,10 @@ create_task_definition() {
     # Obter execution role ARN
     local execution_role_arn="arn:aws:iam::$AWS_ACCOUNT_ID:role/ecsTaskExecutionRole"
     
-    # Criar JSON da task definition
-    local task_def_json=$(cat <<EOF
+    # Criar arquivo temporário para task definition
+    local temp_file=$(mktemp)
+    
+    cat > "$temp_file" <<EOF
 {
     "family": "$TASK_DEFINITION_FAMILY",
     "executionRoleArn": "$execution_role_arn",
@@ -305,14 +307,16 @@ create_task_definition() {
     ]
 }
 EOF
-)
     
     # Registrar task definition
-    local task_def_arn=$(echo "$task_def_json" | aws ecs register-task-definition \
+    local task_def_arn=$(aws ecs register-task-definition \
         --region $AWS_REGION \
-        --cli-input-json file:///dev/stdin \
+        --cli-input-json file://"$temp_file" \
         --query 'taskDefinition.taskDefinitionArn' \
         --output text)
+    
+    # Limpar arquivo temporário
+    rm -f "$temp_file"
     
     print_success "Task Definition criada: $task_def_arn"
     echo "$task_def_arn"
