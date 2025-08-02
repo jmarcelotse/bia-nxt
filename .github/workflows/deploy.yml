@@ -12,7 +12,7 @@ env:
   ECS_CLUSTER_NAME: cluster-bia-alb
   ECS_SERVICE_NAME: service-bia-alb
   ECS_TASK_DEFINITION: task-def-bia-alb
-  ALB_URL: bia-alb-690586468.us-east-1.elb.amazonaws.com
+  ALB_URL: formacao.nxt-tse.com
 
 jobs:
   build-and-deploy:
@@ -60,10 +60,10 @@ jobs:
         echo "=== BUILD PHASE ==="
         echo "Build da aplicação iniciado em $(date)"
         echo "Construindo imagem Docker da aplicação BIA..."
-        echo "Configurando VITE_API_URL para ALB: http://$ALB_URL"
+        echo "Configurando VITE_API_URL para ALB: https://$ALB_URL"
         
         # Build da imagem
-        docker build --build-arg VITE_API_URL=http://$ALB_URL -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+        docker build --build-arg VITE_API_URL=https://$ALB_URL -t $IMAGE_REPO_NAME:$IMAGE_TAG .
         docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
         docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:latest
         
@@ -144,7 +144,7 @@ jobs:
         # Testar conectividade
         echo "🌐 Testando conectividade..."
         for i in {1..5}; do
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$ALB_URL/api/versao || echo "000")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://$ALB_URL/api/versao || echo "000")
           if [ "$HTTP_STATUS" = "200" ]; then
             echo "✅ Aplicação respondendo corretamente (HTTP $HTTP_STATUS)"
             break
@@ -155,7 +155,7 @@ jobs:
         done
         
         # Verificar versão da API
-        API_VERSION=$(curl -s http://$ALB_URL/api/versao || echo "N/A")
+        API_VERSION=$(curl -s https://$ALB_URL/api/versao || echo "N/A")
         echo "🏷️ Versão da API: $API_VERSION"
         
         echo "=== DEPLOYMENT COMPLETED ==="
@@ -169,9 +169,9 @@ jobs:
         echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
         echo "| 🏷️ Image Tag | \`${{ env.IMAGE_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| 📦 Repository URI | \`${{ env.REPOSITORY_URI }}\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🔗 Application URL | [http://${{ env.ALB_URL }}](http://${{ env.ALB_URL }}) |" >> $GITHUB_STEP_SUMMARY
-        echo "| 🎯 API Version | [/api/versao](http://${{ env.ALB_URL }}/api/versao) |" >> $GITHUB_STEP_SUMMARY
-        echo "| 📋 API Tasks | [/api/tarefas](http://${{ env.ALB_URL }}/api/tarefas) |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔗 Application URL | [https://${{ env.ALB_URL }}](https://${{ env.ALB_URL }}) |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🎯 API Version | [/api/versao](https://${{ env.ALB_URL }}/api/versao) |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📋 API Tasks | [/api/tarefas](https://${{ env.ALB_URL }}/api/tarefas) |" >> $GITHUB_STEP_SUMMARY
         echo "| 🏗️ ECS Cluster | \`${{ env.ECS_CLUSTER_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| 🔧 ECS Service | \`${{ env.ECS_SERVICE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| 📅 Deploy Time | \`$(date -u)\` |" >> $GITHUB_STEP_SUMMARY
