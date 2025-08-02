@@ -5,7 +5,8 @@ RUN npm install -g npm@11 --loglevel=error
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Build argument para URL da API
-ARG VITE_API_URL=http://bia-alb-690586468.us-east-1.elb.amazonaws.com
+#ARG VITE_API_URL=http://bia-alb-690586468.us-east-1.elb.amazonaws.com
+ARG VITE_API_URL=https://formacao.nxt-tse.com
 ENV VITE_API_URL=$VITE_API_URL
 
 WORKDIR /usr/src/app
