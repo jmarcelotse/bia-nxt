@@ -4,6 +4,10 @@ RUN npm install -g npm@11 --loglevel=error
 # Instalando curl
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
+# Build argument para URL da API
+ARG VITE_API_URL=http://bia-alb-690586468.us-east-1.elb.amazonaws.com
+ENV VITE_API_URL=$VITE_API_URL
+
 WORKDIR /usr/src/app
 
 # Copiar package.json raiz primeiro
@@ -17,8 +21,8 @@ RUN cd client && npm install --legacy-peer-deps --loglevel=error
 # Copiar todos os arquivos
 COPY . .
 
-# Build do front-end com Vite
-RUN cd client && VITE_API_URL=http://bia-alb-690586468.us-east-1.elb.amazonaws.com npm run build
+# Build do front-end com Vite usando a variável de ambiente
+RUN cd client && npm run build
 
 # Limpeza das dependências de desenvolvimento do client para reduzir tamanho
 RUN cd client && npm prune --production && rm -rf node_modules/.cache
