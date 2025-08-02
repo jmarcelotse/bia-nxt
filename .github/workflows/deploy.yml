@@ -1,0 +1,187 @@
+name: 🚀 Deploy BIA to AWS ECS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_ACCOUNT_ID: 873976611862
+  IMAGE_REPO_NAME: bia
+  ECS_CLUSTER_NAME: cluster-bia-alb
+  ECS_SERVICE_NAME: service-bia-alb
+  ECS_TASK_DEFINITION: task-def-bia-alb
+  ALB_URL: bia-alb-690586468.us-east-1.elb.amazonaws.com
+
+jobs:
+  build-and-deploy:
+    name: 🚀 Build and Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+    # === PRE-BUILD PHASE ===
+    - name: 🔄 PRE-BUILD PHASE
+      run: |
+        echo "=== PRE-BUILD PHASE ==="
+        echo "Build iniciado em $(date)"
+        echo "Fazendo login no Amazon ECR..."
+        
+        # Login no ECR
+        aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+        
+        # Definir variáveis
+        REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+        COMMIT_HASH=$(echo $GITHUB_SHA | cut -c 1-7)
+        IMAGE_TAG=${COMMIT_HASH:-latest}
+        
+        echo "Repository URI: $REPOSITORY_URI"
+        echo "Commit Hash: $COMMIT_HASH"
+        echo "Image Tag: $IMAGE_TAG"
+        
+        # Salvar variáveis para próximos steps
+        echo "REPOSITORY_URI=$REPOSITORY_URI" >> $GITHUB_ENV
+        echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+    # === BUILD PHASE ===
+    - name: 🔨 BUILD PHASE
+      run: |
+        echo "=== BUILD PHASE ==="
+        echo "Build da aplicação iniciado em $(date)"
+        echo "Construindo imagem Docker da aplicação BIA..."
+        echo "Configurando VITE_API_URL para ALB: http://$ALB_URL"
+        
+        # Build da imagem
+        docker build --build-arg VITE_API_URL=http://$ALB_URL -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+        docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
+        docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:latest
+        
+        echo "Build da imagem concluído com sucesso"
+
+    # === POST-BUILD PHASE ===
+    - name: 📦 POST-BUILD PHASE
+      run: |
+        echo "=== POST-BUILD PHASE ==="
+        echo "Build finalizado com sucesso em $(date)"
+        echo "Fazendo push da imagem para Amazon ECR..."
+        
+        # Push das imagens
+        docker push $REPOSITORY_URI:latest
+        docker push $REPOSITORY_URI:$IMAGE_TAG
+        
+        echo "Push concluído com sucesso"
+        echo "Gerando arquivo imagedefinitions.json para ECS..."
+        
+        # Gerar imagedefinitions.json
+        printf '[{"name":"bia","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+        
+        echo "Conteúdo do imagedefinitions.json:"
+        cat imagedefinitions.json
+        
+        echo "Verificando se a imagem foi enviada corretamente..."
+        aws ecr describe-images --repository-name $IMAGE_REPO_NAME --image-ids imageTag=$IMAGE_TAG --region $AWS_DEFAULT_REGION
+        
+        echo "=== BUILD PROCESS COMPLETED ==="
+
+    # === DEPLOY PHASE (equivalente ao CodePipeline Deploy) ===
+    - name: 🚀 DEPLOY PHASE
+      run: |
+        echo "=== DEPLOY PHASE ==="
+        echo "Iniciando deploy no ECS..."
+        
+        # Download da task definition atual
+        aws ecs describe-task-definition \
+          --task-definition $ECS_TASK_DEFINITION \
+          --query taskDefinition > task-definition.json
+        
+        echo "Task definition baixada com sucesso"
+
+    - name: 🔄 Update task definition with new image
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: bia
+        image: ${{ env.REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
+
+    - name: 🚀 Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE_NAME }}
+        cluster: ${{ env.ECS_CLUSTER_NAME }}
+        wait-for-service-stability: true
+
+    # === VERIFICATION PHASE ===
+    - name: 🔍 VERIFICATION PHASE
+      run: |
+        echo "=== VERIFICATION PHASE ==="
+        echo "Verificando deployment..."
+        
+        # Aguardar estabilização
+        sleep 30
+        
+        # Verificar status do serviço
+        SERVICE_STATUS=$(aws ecs describe-services \
+          --cluster $ECS_CLUSTER_NAME \
+          --services $ECS_SERVICE_NAME \
+          --query 'services[0].{running:runningCount,desired:desiredCount,status:status}' \
+          --output json)
+        
+        echo "📊 Service Status: $SERVICE_STATUS"
+        
+        # Testar conectividade
+        echo "🌐 Testando conectividade..."
+        for i in {1..5}; do
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$ALB_URL/api/versao || echo "000")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Aplicação respondendo corretamente (HTTP $HTTP_STATUS)"
+            break
+          else
+            echo "⏳ Tentativa $i/5 - HTTP $HTTP_STATUS, aguardando..."
+            sleep 10
+          fi
+        done
+        
+        # Verificar versão da API
+        API_VERSION=$(curl -s http://$ALB_URL/api/versao || echo "N/A")
+        echo "🏷️ Versão da API: $API_VERSION"
+        
+        echo "=== DEPLOYMENT COMPLETED ==="
+
+    # === DEPLOYMENT SUMMARY ===
+    - name: 📝 Create deployment summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🏷️ Image Tag | \`${{ env.IMAGE_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📦 Repository URI | \`${{ env.REPOSITORY_URI }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔗 Application URL | [http://${{ env.ALB_URL }}](http://${{ env.ALB_URL }}) |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🎯 API Version | [/api/versao](http://${{ env.ALB_URL }}/api/versao) |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📋 API Tasks | [/api/tarefas](http://${{ env.ALB_URL }}/api/tarefas) |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🏗️ ECS Cluster | \`${{ env.ECS_CLUSTER_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔧 ECS Service | \`${{ env.ECS_SERVICE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📅 Deploy Time | \`$(date -u)\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔄 Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔄 Commit Hash | \`${{ env.COMMIT_HASH }}\` |" >> $GITHUB_STEP_SUMMARY
+
+    # === UPLOAD ARTIFACTS (equivalente ao buildspec artifacts) ===
+    - name: 📋 Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: bia-build-artifacts
+        path: imagedefinitions.json
+        retention-days: 30
