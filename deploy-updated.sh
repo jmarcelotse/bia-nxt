@@ -11,9 +11,9 @@ set -e
 
 # Configurações
 REGION="us-east-1"
-CLUSTER_NAME="cluster-bia"
-SERVICE_NAME="service-bia"
-TASK_DEFINITION="task-def-bia"
+CLUSTER_NAME="cluster-bia-alb"
+SERVICE_NAME="service-bia-alb"
+TASK_DEFINITION="task-def-bia-alb"
 ECR_REPOSITORY="873976611862.dkr.ecr.us-east-1.amazonaws.com/bia"
 APPLICATION_URL="http://54.227.222.64"
 
