@@ -1,0 +1,73 @@
+{
+  "project": {
+    "name": "BIA - Task Manager",
+    "version": "4.2.0",
+    "description": "Aplicação de gerenciamento de tarefas em Node.js + React",
+    "author": "Jose Marcelo Tse <jmarcelotse@hotmail.com>",
+    "repository": "git@github.com:jmarcelotse/bia-nxt.git"
+  },
+  "deployment": {
+    "current_commit": "f9518c7",
+    "last_deploy": "2025-08-01T23:55:00Z",
+    "application_url": "http://54.227.222.64",
+    "status": "active"
+  },
+  "aws": {
+    "region": "us-east-1",
+    "account_id": "873976611862",
+    "ecs": {
+      "cluster": "cluster-bia",
+      "service": "service-bia",
+      "task_definition": "task-def-bia:5"
+    },
+    "ec2": {
+      "instance_id": "i-07de193874f823694",
+      "public_ip": "54.227.222.64",
+      "instance_type": "t3.micro"
+    },
+    "rds": {
+      "instance_id": "bia",
+      "endpoint": "bia.ccxceeiycgx6.us-east-1.rds.amazonaws.com",
+      "port": 5432,
+      "engine": "postgres",
+      "version": "17.4"
+    },
+    "ecr": {
+      "repository": "873976611862.dkr.ecr.us-east-1.amazonaws.com/bia",
+      "current_image": "f9518c7"
+    },
+    "secrets_manager": {
+      "secret_arn": "arn:aws:secretsmanager:us-east-1:873976611862:secret:rds!db-351c97aa-df32-43ee-8182-b2872962dbb7-mHDOMB"
+    }
+  },
+  "features": {
+    "frontend": {
+      "framework": "React + Vite",
+      "language": "Portuguese",
+      "responsive": true
+    },
+    "backend": {
+      "framework": "Node.js + Express",
+      "database": "PostgreSQL",
+      "authentication": "AWS Secrets Manager"
+    },
+    "infrastructure": {
+      "containerization": "Docker",
+      "orchestration": "Amazon ECS",
+      "database": "Amazon RDS",
+      "monitoring": "CloudWatch"
+    }
+  },
+  "endpoints": {
+    "frontend": "http://54.227.222.64",
+    "api_version": "http://54.227.222.64/api/versao",
+    "api_tasks": "http://54.227.222.64/api/tarefas"
+  },
+  "testing": {
+    "last_test": "2025-08-01T23:55:00Z",
+    "connectivity": "✅ OK",
+    "database": "✅ OK",
+    "crud_operations": "✅ OK",
+    "interface": "✅ OK"
+  }
+}
