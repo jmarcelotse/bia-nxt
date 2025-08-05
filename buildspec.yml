@@ -8,7 +8,7 @@ env:
     ECS_CLUSTER_NAME: cluster-bia-alb
     ECS_SERVICE_NAME: service-bia-alb
     ECS_TASK_DEFINITION: task-def-bia-alb
-    ALB_URL: bia-alb-690586468.us-east-1.elb.amazonaws.com
+    ALB_URL: formacao.nxt-tse.com
 
 phases:
   pre_build:

@@ -1,31 +1,145 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# 📦 PROJETO BIA - .gitignore
+# Apenas arquivos essenciais para funcionamento da aplicação
 
-# dependencies
+# ===== DEPENDÊNCIAS =====
+node_modules/
 /node_modules
-
-
-
-#React node_modules
 /client/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
 
-#React production project
-/client/build
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
+# ===== BUILDS E DIST =====
 /build
+/client/build
+/client/dist
+/dist
 
-# misc
-.DS_Store
+# ===== AMBIENTE E CONFIGURAÇÕES SENSÍVEIS =====
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*
+*.env
 
+# ===== LOGS =====
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+
+# ===== CACHE E TEMPORÁRIOS =====
+.cache/
+.tmp/
+.temp/
+*.tmp
+*.temp
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== PYTHON (para scripts auxiliares) =====
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+
+# ===== DOCKER =====
+.dockerignore.backup
+Dockerfile.backup
+Dockerfile.new
+compose.yml.backup
+
+# ===== AWS E DEPLOY =====
+# Scripts de deploy e configuração (manter apenas essenciais)
+deploy-*.sh
+*-deploy.sh
+update-*.sh
+fix-*.sh
+test-*.sh
+check-*.sh
+monitor-*.sh
+ecs-deploy.sh
+git-manager.sh
+
+# Arquivos de configuração AWS específicos
+task-definition-*.json
+deploy-info-*.json
+project-config.json
+project-config-updated.json
+
+# ===== DOCUMENTAÇÃO TEMPORÁRIA =====
+# Manter apenas README.md principal
+README-*.md
+*-GUIDE.md
+*-SUMMARY.md
+*-STATUS*.md
+*-DEPLOY*.md
+*-UPDATE*.md
+*-FINAL*.md
+*-CHANGES.md
+*-FIX.md
+*-SETUP.md
+*-VALIDACAO*.md
+PROJETO-*.md
+ECS-*.md
+GITHUB-*.md
+BUILDSPEC-*.md
+DOMAIN-*.md
+FILES-*.md
+FINAL-*.md
+AmazonQ.md
+
+# ===== SCRIPTS AUXILIARES =====
+# Scripts que não são essenciais para a aplicação
+*.sh
+!rodar_app_local_unix.sh
+*.bat
+!rodar_app_local_windows.bat
+
+# ===== DIRETÓRIOS AUXILIARES =====
+/2/
+/scripts/
+/scripts_evento/
+/.amazonq/
+/tests/coverage/
+
+# ===== ARQUIVOS DE BACKUP =====
+*.backup
+*.bak
+*.old
+
+# ===== ARQUIVOS ESPECÍFICOS DO PROJETO =====
+generate-sts-token.*
+compose.yml
+.sequelizerc
+
+# ===== GITHUB ACTIONS (manter apenas se necessário) =====
+# Descomente se quiser manter GitHub Actions
+# .github/
+
+# ===== MANTER APENAS ESTES ARQUIVOS ESSENCIAIS =====
+# ✅ /api/ (backend)
+# ✅ /client/ (frontend) 
+# ✅ /config/ (configurações)
+# ✅ /database/ (migrations/seeders)
+# ✅ /lib/ (bibliotecas)
+# ✅ package.json
+# ✅ Dockerfile
+# ✅ buildspec.yml
+# ✅ index.js
+# ✅ server.js
+# ✅ index.html
+# ✅ README.md (principal)
+# ✅ .gitignore
